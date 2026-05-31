@@ -1,0 +1,108 @@
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  animation: fadeUp 0.4s ease both;
+}
+.card:hover {
+  border-color: var(--border-hover);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 32px rgba(124,58,237,0.12);
+}
+.card:focus-visible {
+  outline: 2px solid var(--purple);
+  outline-offset: 2px;
+}
+.card--sold {
+  opacity: 0.5;
+  cursor: default;
+}
+.card--sold:hover {
+  transform: none;
+  border-color: var(--border);
+  box-shadow: none;
+}
+
+.card__img {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  background: var(--bg-surface);
+  overflow: hidden;
+}
+.card__img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+.card:hover .card__img img { transform: scale(1.04); }
+
+.card__img-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+}
+
+.card__badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.card__badge--destaque {
+  background: var(--purple);
+  color: #fff;
+}
+.card__badge--sold {
+  background: rgba(255,255,255,0.08);
+  color: var(--text-dim);
+}
+
+.card__body {
+  padding: 12px 14px 14px;
+}
+.card__name {
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.card__sub {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-bottom: 10px;
+}
+.card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.card__price {
+  font-family: 'Syne', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--purple-light);
+}
+.card__cta {
+  font-size: 11px;
+  color: var(--text-dim);
+  transition: color 0.2s;
+}
+.card:hover .card__cta { color: var(--purple-light); }

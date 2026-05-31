@@ -1,0 +1,123 @@
+.dashboard {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2.5rem 2rem 4rem;
+}
+
+.dashboard__header {
+  margin-bottom: 2rem;
+}
+.dashboard__title {
+  font-size: 24px;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+.dashboard__sub {
+  font-size: 13px;
+  color: var(--text-dim);
+}
+.dashboard__sub strong { color: var(--text-muted); }
+
+.dashboard__empty {
+  text-align: center;
+  padding: 5rem 0;
+  color: var(--text-dim);
+}
+.dashboard__empty-icon { font-size: 48px; margin-bottom: 12px; }
+
+.dashboard__list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.inbox-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+  transition: border-color 0.2s;
+}
+.inbox-card--new {
+  border-color: var(--purple-border);
+  box-shadow: 0 0 0 1px var(--purple-dim);
+}
+.inbox-card:hover { border-color: var(--border-hover); }
+
+.inbox-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.inbox-card__produto {
+  font-family: 'Syne', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 3px;
+}
+.inbox-card__date {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.inbox-card__new {
+  background: var(--purple-dim);
+  border: 1px solid var(--purple-border);
+  color: var(--purple-light);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.inbox-card__credentials {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.cred-field {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+.cred-field__label {
+  font-size: 10px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  display: block;
+  margin-bottom: 4px;
+}
+.cred-field__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.cred-field__value {
+  font-size: 13px;
+  color: var(--text);
+  font-family: monospace;
+  letter-spacing: 0.5px;
+  word-break: break-all;
+}
+.cred-copy {
+  background: none;
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.18s;
+  flex-shrink: 0;
+}
+.cred-copy:hover { opacity: 1; }
+
+.inbox-card__reveal {
+  width: 100%;
+  justify-content: center;
+}
