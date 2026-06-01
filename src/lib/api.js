@@ -26,7 +26,7 @@ export const api = {
   me: () => request('/auth/me'),
 
   // Checkout — gera o Pix via n8n
-  checkout: (listingId) => request('/checkout', { method: 'POST', body: JSON.stringify({ listing_id: listingId }) }),
+  checkout: (produto) => request('/checkout', { method: 'POST', body: JSON.stringify({ produto }) }),
 
   // Inbox — contas compradas pelo usuário
   inbox: () => request('/inbox'),

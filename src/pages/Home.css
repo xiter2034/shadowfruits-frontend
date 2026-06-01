@@ -1,108 +1,128 @@
-.card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+.home__banner {
+  width: 100%;
+  height: 220px;
   overflow: hidden;
-  cursor: pointer;
-  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
-  animation: fadeUp 0.4s ease both;
-}
-.card:hover {
-  border-color: var(--border-hover);
-  transform: translateY(-3px);
-  box-shadow: 0 8px 32px rgba(124,58,237,0.12);
-}
-.card:focus-visible {
-  outline: 2px solid var(--purple);
-  outline-offset: 2px;
-}
-.card--sold {
-  opacity: 0.5;
-  cursor: default;
-}
-.card--sold:hover {
-  transform: none;
-  border-color: var(--border);
-  box-shadow: none;
-}
-
-.card__img {
   position: relative;
-  aspect-ratio: 1 / 1;
-  background: var(--bg-surface);
-  overflow: hidden;
+  background: linear-gradient(135deg, #0e0820 0%, #1a0a3e 50%, #0e0820 100%);
+  border-bottom: 1px solid var(--border);
 }
-.card__img img {
+.home__banner-inner {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+.home__banner-inner img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.4s ease;
+  position: absolute;
+  inset: 0;
 }
-.card:hover .card__img img { transform: scale(1.04); }
-
-.card__img-placeholder {
-  width: 100%;
-  height: 100%;
+.home__banner-fallback {
+  position: absolute;
+  inset: 0;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
+  text-align: center;
+  gap: 8px;
+}
+.home__banner-fallback h1 {
+  font-size: clamp(28px, 5vw, 48px);
+  color: var(--text-muted);
+  letter-spacing: -1px;
+}
+.home__banner-fallback h1 span { color: var(--purple-light); }
+.home__banner-fallback p {
+  font-size: 13px;
   color: var(--text-dim);
   letter-spacing: 1px;
 }
 
-.card__badge {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  font-size: 10px;
-  font-weight: 600;
-  padding: 3px 8px;
-  border-radius: 6px;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
+.home__filters {
+  display: flex;
+  gap: 8px;
+  padding: 16px 2rem;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
 }
-.card__badge--destaque {
-  background: var(--purple);
-  color: #fff;
+.filter-tag {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.18s;
 }
-.card__badge--sold {
-  background: rgba(255,255,255,0.08);
+.filter-tag:hover {
+  border-color: var(--border-hover);
+  color: var(--text);
+}
+.filter-tag--active {
+  background: var(--purple-dim);
+  border-color: var(--purple-border);
+  color: var(--purple-light);
+}
+
+.home__section {
+  padding: 24px 2rem 3rem;
+}
+.home__section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.home__section-title {
+  font-size: 16px;
+  color: var(--text);
+}
+.home__section-count {
+  font-size: 12px;
   color: var(--text-dim);
 }
 
-.card__body {
-  padding: 12px 14px 14px;
+.home__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 14px;
 }
-.card__name {
-  font-family: 'Syne', sans-serif;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text);
-  margin-bottom: 3px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+
+/* Skeleton loading */
+.home__loading {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 14px;
 }
-.card__sub {
-  font-size: 11px;
+.card-skeleton {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  aspect-ratio: 0.8;
+  animation: pulse 1.4s ease infinite;
+}
+
+.home__empty {
+  text-align: center;
+  padding: 4rem 0;
   color: var(--text-dim);
-  margin-bottom: 10px;
+  font-size: 14px;
 }
-.card__footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+
+/* Badge de estoque */
+.card__estoque {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.15);
 }
-.card__price {
-  font-family: 'Syne', sans-serif;
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--purple-light);
-}
-.card__cta {
-  font-size: 11px;
-  color: var(--text-dim);
-  transition: color 0.2s;
-}
-.card:hover .card__cta { color: var(--purple-light); }

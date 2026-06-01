@@ -7,9 +7,9 @@ const FILTROS = ['Todos', 'MAX', 'GARP', 'POPULAR', 'BROOK']
 
 const PRODUTO_INFO = {
   MAX:     { label: 'Conta Max Level', cor: '#7C3AED' },
-  GARP:    { label: 'Conta GOD HUMAN ',      cor: '#2563EB' },
-  POPULAR: { label: 'Conta Barata',   cor: '#059669' },
-  BROOK:   { label: 'Conta Skull  Guitar',     cor: '#D97706' },
+  GARP:    { label: 'Conta Garp',      cor: '#2563EB' },
+  POPULAR: { label: 'Conta Popular',   cor: '#059669' },
+  BROOK:   { label: 'Conta Brook',     cor: '#D97706' },
 }
 
 export default function Home() {

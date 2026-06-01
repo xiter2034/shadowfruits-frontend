@@ -17,7 +17,7 @@ export default function ProductModal({ listing, onClose }) {
     setLoading(true)
     setError('')
     try {
-      const data = await api.checkout(listing.id)
+      const data = await api.checkout(listing.produto)
       setPix(data)
       setStep('pix')
     } catch (e) {
