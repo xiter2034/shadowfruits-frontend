@@ -1,152 +1,110 @@
-import { useState, useEffect } from 'react'
-import { supabase } from '../lib/supabase'
-import ProductModal from '../components/ProductModal'
-import './Home.css'
+import { Router } from 'express'
+import bcrypt from 'bcryptjs'
+import jwt from 'jsonwebtoken'
+import { z } from 'zod'
+import { supabase } from '../lib/supabase.js'
+import { authMiddleware } from '../middleware/auth.js'
 
-const FILTROS = ['Todos', 'MAX', 'GARP', 'POPULAR', 'BROOK']
+const router = Router()
 
-const PRODUTO_INFO = {
-  MAX:     { label: 'Conta Max Level', cor: '#7C3AED' },
-  GARP:    { label: 'Conta Garp',      cor: '#2563EB' },
-  POPULAR: { label: 'Conta Popular',   cor: '#059669' },
-  BROOK:   { label: 'Conta Brook',     cor: '#D97706' },
-}
+const registerSchema = z.object({
+  email: z.string().email('E-mail inválido'),
+  password: z.string().min(6, 'Mínimo 6 caracteres'),
+  username: z.string().min(3, 'Mínimo 3 caracteres').max(32),
+})
 
-export default function Home() {
-  const [grupos, setGrupos] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [filtro, setFiltro] = useState('Todos')
-  const [selected, setSelected] = useState(null)
+const loginSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(1),
+})
 
-  useEffect(() => { fetchGrupos() }, [filtro])
-
-  async function fetchGrupos() {
-    setLoading(true)
-
-    let query = supabase
-      .from('contas')
-      .select('id, nome, produto, preco, status, imagem_url, descricao, tags, destaque')
-      .eq('status', 'DISPONIVEL')
-
-    if (filtro !== 'Todos') query = query.eq('produto', filtro)
-
-    const { data } = await query
-    if (!data) { setGrupos([]); setLoading(false); return }
-
-    // Agrupar por produto
-    const mapa = {}
-    for (const conta of data) {
-      const p = conta.produto
-      if (!mapa[p]) {
-        mapa[p] = {
-          produto: p,
-          nome: PRODUTO_INFO[p]?.label || p,
-          cor: PRODUTO_INFO[p]?.cor || '#7C3AED',
-          preco: conta.preco,
-          descricao: conta.descricao,
-          tags: conta.tags,
-          imagem_url: conta.imagem_url,
-          destaque: conta.destaque,
-          quantidade: 0,
-          // guarda um id representativo para o checkout
-          id: conta.id,
-        }
-      }
-      mapa[p].quantidade++
-    }
-
-    // Ordena: destaque primeiro, depois por preço
-    const lista = Object.values(mapa).sort((a, b) => {
-      if (b.destaque !== a.destaque) return b.destaque ? 1 : -1
-      return a.preco - b.preco
-    })
-
-    setGrupos(lista)
-    setLoading(false)
-  }
-
-  return (
-    <main className="home">
-      {/* Banner */}
-      <div className="home__banner">
-        <div className="home__banner-inner">
-          <img src="/banner.png" alt="ShadowFruits" onError={e => { e.target.style.display = 'none' }} />
-          <div className="home__banner-fallback">
-            <h1>Shadow<span>Fruits</span></h1>
-            <p>Marketplace de contas Roblox · Entrega imediata</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Filtros */}
-      <div className="home__filters">
-        {FILTROS.map(f => (
-          <button
-            key={f}
-            className={`filter-tag ${filtro === f ? 'filter-tag--active' : ''}`}
-            onClick={() => setFiltro(f)}
-          >{f}</button>
-        ))}
-      </div>
-
-      {/* Grid de grupos */}
-      <section className="home__section">
-        <div className="home__section-header">
-          <h2 className="home__section-title">Contas disponíveis</h2>
-          {!loading && (
-            <span className="home__section-count">
-              {grupos.reduce((acc, g) => acc + g.quantidade, 0)} em estoque
-            </span>
-          )}
-        </div>
-
-        {loading ? (
-          <div className="home__loading">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="card-skeleton" style={{ animationDelay: `${i * 0.08}s` }} />
-            ))}
-          </div>
-        ) : grupos.length === 0 ? (
-          <div className="home__empty"><p>Nenhuma conta disponível no momento.</p></div>
-        ) : (
-          <div className="home__grid">
-            {grupos.map((grupo, i) => (
-              <article
-                key={grupo.produto}
-                className="card fade-up"
-                style={{ animationDelay: `${i * 0.07}s`, '--card-cor': grupo.cor }}
-                onClick={() => setSelected(grupo)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={e => e.key === 'Enter' && setSelected(grupo)}
-              >
-                <div className="card__img">
-                  {grupo.imagem_url
-                    ? <img src={grupo.imagem_url} alt={grupo.nome} loading="lazy" />
-                    : <div className="card__img-placeholder">sem imagem</div>
-                  }
-                  {grupo.destaque && (
-                    <span className="card__badge card__badge--destaque">Destaque</span>
-                  )}
-                  <span className="card__estoque">{grupo.quantidade} disponível{grupo.quantidade !== 1 ? 'is' : ''}</span>
-                </div>
-                <div className="card__body">
-                  <p className="card__name">{grupo.nome}</p>
-                  <p className="card__sub">{grupo.produto}</p>
-                  <div className="card__footer">
-                    <span className="card__price">R$ {Number(grupo.preco).toFixed(2)}</span>
-                    <span className="card__cta">Ver detalhes →</span>
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {selected && (
-        <ProductModal listing={selected} onClose={() => setSelected(null)} />
-      )}
-    </main>
+function makeToken(user) {
+  return jwt.sign(
+    { id: user.id, email: user.email, username: user.username, role: user.role },
+    process.env.JWT_SECRET,
+    { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
   )
 }
+
+// POST /auth/register
+router.post('/register', async (req, res) => {
+  const parsed = registerSchema.safeParse(req.body)
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.errors[0].message })
+  }
+
+  const { email, password, username } = parsed.data
+
+  // Verifica se e-mail já existe
+  const { data: existing } = await supabase
+    .from('users')
+    .select('id')
+    .eq('email', email)
+    .maybeSingle()
+
+  if (existing) return res.status(409).json({ error: 'E-mail já cadastrado' })
+
+  // Gera hash com salt 10
+  const salt = await bcrypt.genSalt(10)
+  const senha_hash = await bcrypt.hash(password, salt)
+
+  console.log('[register] email:', email, '| hash gerado:', senha_hash.substring(0, 20) + '...')
+
+  const { data: user, error } = await supabase
+    .from('users')
+    .insert({ email, senha_hash, username, role: 'user' })
+    .select('id, email, username, role')
+    .single()
+
+  if (error) {
+    console.error('[register] erro supabase:', error)
+    return res.status(500).json({ error: 'Erro ao criar conta: ' + error.message })
+  }
+
+  return res.status(201).json({ token: makeToken(user), user })
+})
+
+// POST /auth/login
+router.post('/login', async (req, res) => {
+  const parsed = loginSchema.safeParse(req.body)
+  if (!parsed.success) {
+    return res.status(400).json({ error: 'Dados inválidos' })
+  }
+
+  const { email, password } = parsed.data
+
+  const { data: user, error } = await supabase
+    .from('users')
+    .select('id, email, username, role, senha_hash')
+    .eq('email', email)
+    .maybeSingle()
+
+  console.log('[login] email:', email, '| user encontrado:', !!user, '| erro:', error?.message)
+
+  if (!user) return res.status(401).json({ error: 'E-mail ou senha incorretos' })
+
+  console.log('[login] hash no banco:', user.senha_hash?.substring(0, 20) + '...')
+
+  const valid = await bcrypt.compare(password, user.senha_hash)
+
+  console.log('[login] senha válida:', valid)
+
+  if (!valid) return res.status(401).json({ error: 'E-mail ou senha incorretos' })
+
+  const { senha_hash, ...safeUser } = user
+  return res.json({ token: makeToken(safeUser), user: safeUser })
+})
+
+// GET /auth/me
+router.get('/me', authMiddleware, async (req, res) => {
+  const { data: user } = await supabase
+    .from('users')
+    .select('id, email, username, role')
+    .eq('id', req.user.id)
+    .maybeSingle()
+
+  if (!user) return res.status(404).json({ error: 'Usuário não encontrado' })
+  return res.json({ user })
+})
+
+export default router
