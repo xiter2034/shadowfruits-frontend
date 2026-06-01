@@ -1,50 +1,76 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
-import ProductCard from '../components/ProductCard'
 import ProductModal from '../components/ProductModal'
 import './Home.css'
 
-const FILTROS = ['Todos', 'Blox Fruits', 'Limitadas', 'Nível alto', 'Menor preço']
+const FILTROS = ['Todos', 'MAX', 'GARP', 'POPULAR', 'BROOK']
+
+const PRODUTO_INFO = {
+  MAX:     { label: 'Conta Max Level', cor: '#7C3AED' },
+  GARP:    { label: 'Conta GOD HUMAN ',      cor: '#2563EB' },
+  POPULAR: { label: 'Conta Barata',   cor: '#059669' },
+  BROOK:   { label: 'Conta Skull  Guitar',     cor: '#D97706' },
+}
 
 export default function Home() {
-  const [listings, setListings] = useState([])
+  const [grupos, setGrupos] = useState([])
   const [loading, setLoading] = useState(true)
   const [filtro, setFiltro] = useState('Todos')
   const [selected, setSelected] = useState(null)
 
-  useEffect(() => {
-    fetchListings()
-  }, [filtro])
+  useEffect(() => { fetchGrupos() }, [filtro])
 
-  async function fetchListings() {
+  async function fetchGrupos() {
     setLoading(true)
+
     let query = supabase
       .from('contas')
-      .select('id, nome, produto, nivel, preco, status, imagem_url, descricao, tags, destaque')
-      .neq('status', 'PROCESSANDO')
-      .order('destaque', { ascending: false })
-      .order('created_at', { ascending: false })
+      .select('id, nome, produto, preco, status, imagem_url, descricao, tags, destaque')
+      .eq('status', 'DISPONIVEL')
 
-    if (filtro === 'Blox Fruits') query = query.eq('produto', 'Blox Fruits')
-    if (filtro === 'Nível alto') query = query.gte('nivel', 1500)
-    if (filtro === 'Menor preço') query = query.order('preco', { ascending: true })
-    if (filtro === 'Limitadas') query = query.eq('destaque', true)
+    if (filtro !== 'Todos') query = query.eq('produto', filtro)
 
     const { data } = await query
-    setListings(data || [])
+    if (!data) { setGrupos([]); setLoading(false); return }
+
+    // Agrupar por produto
+    const mapa = {}
+    for (const conta of data) {
+      const p = conta.produto
+      if (!mapa[p]) {
+        mapa[p] = {
+          produto: p,
+          nome: PRODUTO_INFO[p]?.label || p,
+          cor: PRODUTO_INFO[p]?.cor || '#7C3AED',
+          preco: conta.preco,
+          descricao: conta.descricao,
+          tags: conta.tags,
+          imagem_url: conta.imagem_url,
+          destaque: conta.destaque,
+          quantidade: 0,
+          // guarda um id representativo para o checkout
+          id: conta.id,
+        }
+      }
+      mapa[p].quantidade++
+    }
+
+    // Ordena: destaque primeiro, depois por preço
+    const lista = Object.values(mapa).sort((a, b) => {
+      if (b.destaque !== a.destaque) return b.destaque ? 1 : -1
+      return a.preco - b.preco
+    })
+
+    setGrupos(lista)
     setLoading(false)
   }
 
   return (
     <main className="home">
-      {/* Banner — troque o src pela URL da sua imagem */}
+      {/* Banner */}
       <div className="home__banner">
         <div className="home__banner-inner">
-          <img
-            src="/banner.png"
-            alt="ShadowFruits banner"
-            onError={e => { e.target.style.display = 'none' }}
-          />
+          <img src="/banner.png" alt="ShadowFruits" onError={e => { e.target.style.display = 'none' }} />
           <div className="home__banner-fallback">
             <h1>Shadow<span>Fruits</span></h1>
             <p>Marketplace de contas Roblox · Entrega imediata</p>
@@ -59,42 +85,60 @@ export default function Home() {
             key={f}
             className={`filter-tag ${filtro === f ? 'filter-tag--active' : ''}`}
             onClick={() => setFiltro(f)}
-          >
-            {f}
-          </button>
+          >{f}</button>
         ))}
       </div>
 
-      {/* Grid */}
+      {/* Grid de grupos */}
       <section className="home__section">
         <div className="home__section-header">
           <h2 className="home__section-title">Contas disponíveis</h2>
           {!loading && (
             <span className="home__section-count">
-              {listings.filter(l => l.status === 'DISPONIVEL').length} disponíveis
+              {grupos.reduce((acc, g) => acc + g.quantidade, 0)} em estoque
             </span>
           )}
         </div>
 
         {loading ? (
           <div className="home__loading">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="card-skeleton" style={{ animationDelay: `${i * 0.07}s` }} />
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="card-skeleton" style={{ animationDelay: `${i * 0.08}s` }} />
             ))}
           </div>
-        ) : listings.length === 0 ? (
-          <div className="home__empty">
-            <p>Nenhuma conta disponível no momento.</p>
-          </div>
+        ) : grupos.length === 0 ? (
+          <div className="home__empty"><p>Nenhuma conta disponível no momento.</p></div>
         ) : (
           <div className="home__grid">
-            {listings.map((l, i) => (
-              <ProductCard
-                key={l.id}
-                listing={l}
-                onClick={setSelected}
-                style={{ animationDelay: `${i * 0.06}s` }}
-              />
+            {grupos.map((grupo, i) => (
+              <article
+                key={grupo.produto}
+                className="card fade-up"
+                style={{ animationDelay: `${i * 0.07}s`, '--card-cor': grupo.cor }}
+                onClick={() => setSelected(grupo)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={e => e.key === 'Enter' && setSelected(grupo)}
+              >
+                <div className="card__img">
+                  {grupo.imagem_url
+                    ? <img src={grupo.imagem_url} alt={grupo.nome} loading="lazy" />
+                    : <div className="card__img-placeholder">sem imagem</div>
+                  }
+                  {grupo.destaque && (
+                    <span className="card__badge card__badge--destaque">Destaque</span>
+                  )}
+                  <span className="card__estoque">{grupo.quantidade} disponível{grupo.quantidade !== 1 ? 'is' : ''}</span>
+                </div>
+                <div className="card__body">
+                  <p className="card__name">{grupo.nome}</p>
+                  <p className="card__sub">{grupo.produto}</p>
+                  <div className="card__footer">
+                    <span className="card__price">R$ {Number(grupo.preco).toFixed(2)}</span>
+                    <span className="card__cta">Ver detalhes →</span>
+                  </div>
+                </div>
+              </article>
             ))}
           </div>
         )}
