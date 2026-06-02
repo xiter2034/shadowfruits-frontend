@@ -1,165 +1,307 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../hooks/useAuth'
-import { api } from '../lib/api'
-import './ProductModal.css'
+.moverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.8);
+  backdrop-filter: blur(6px);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
 
-export default function ProductModal({ listing, onClose }) {
-  const { user } = useAuth()
-  const navigate = useNavigate()
-  const [step, setStep]       = useState('detail')
-  const [pix, setPix]         = useState(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError]     = useState('')
-  const [copied, setCopied]   = useState(false)
+.mbox {
+  background: #0F0F1A;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 820px;
+  max-height: 92vh;
+  overflow-y: auto;
+  position: relative;
+}
 
-  const esgotada = listing.quantidade === 0
+.mclose {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 10;
+  background: #15141F;
+  border: 1px solid rgba(255,255,255,0.07);
+  color: #9CA3AF;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  cursor: pointer;
+}
+.mclose:hover { background: rgba(255,255,255,0.1); color: #F0EEFF; }
 
-  async function handleBuy() {
-    if (!user) { navigate('/login'); return }
-    setLoading(true)
-    setError('')
-    try {
-      const data = await api.checkout(listing.produto)
-      setPix(data)
-      setStep('pix')
-    } catch (e) {
-      setError(e.message)
-    } finally {
-      setLoading(false)
-    }
-  }
+.mlayout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 480px;
+}
 
-  function copyPix() {
-    navigator.clipboard.writeText(pix.pix_copia_cola)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
+@media (max-width: 600px) {
+  .mlayout { grid-template-columns: 1fr; }
+}
 
-  return (
-    <div className="modal-overlay fade-in" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="modal fade-up" role="dialog" aria-modal="true">
-        <button className="modal__close" onClick={onClose} aria-label="Fechar">✕</button>
+.mleft {
+  border-right: 1px solid rgba(255,255,255,0.07);
+  position: relative;
+  min-height: 320px;
+  background: #15141F;
+  border-radius: 16px 0 0 16px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
-        {step === 'detail' && (
-          <div className="modal__layout">
-            {/* Coluna esquerda — imagem */}
-            <div className="modal__left">
-              <div className="modal__img">
-                {listing.imagem_url
-                  ? <img src={listing.imagem_url} alt={listing.nome} />
-                  : <div className="modal__img-empty">
-                      <span style={{fontSize:52,opacity:0.3}}>🎮</span>
-                    </div>
-                }
-                {esgotada && <div className="modal__img-esgotado">Esgotado</div>}
-              </div>
-            </div>
+.mimg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  inset: 0;
+}
 
-            {/* Coluna direita — info */}
-            <div className="modal__right">
-              <h2 className="modal__title">{listing.nome}</h2>
+.mimg-empty {
+  font-size: 64px;
+  opacity: 0.2;
+}
 
-              {/* Estoque */}
-              <div className="modal__meta">
-                <span className={`modal__estoque-badge ${esgotada ? 'modal__estoque-badge--out' : ''}`}>
-                  {esgotada ? '❌ Esgotado' : `✅ ${listing.quantidade} em estoque`}
-                </span>
-                {!esgotada && (
-                  <span className="modal__entrega-badge">⚡ Entrega automática</span>
-                )}
-              </div>
+.mesgotado-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Syne', sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  color: #f87171;
+  letter-spacing: 2px;
+}
 
-              {/* Preço */}
-              <div className="modal__price-block">
-                <span className="modal__price">R$ {Number(listing.preco).toFixed(2)}</span>
-                <span className="modal__price-sub">à vista no Pix</span>
-              </div>
+.mright {
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
 
-              {/* Descrição */}
-              {listing.descricao && (
-                <div className="modal__desc-block">
-                  <h3 className="modal__desc-title">Descrição</h3>
-                  <p className="modal__desc">{listing.descricao}</p>
-                </div>
-              )}
+.mtitle {
+  font-family: 'Syne', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  color: #F0EEFF;
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+}
 
-              {/* Tags */}
-              {listing.tags?.length > 0 && (
-                <div className="modal__tags">
-                  {listing.tags.map(tag => (
-                    <span key={tag} className="modal__tag">{tag}</span>
-                  ))}
-                </div>
-              )}
+.mbadges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
 
-              {/* Garantias */}
-              <div className="modal__garantias">
-                <div className="modal__garantia">
-                  <span>⚡</span>
-                  <div>
-                    <p className="modal__garantia-title">Entrega imediata</p>
-                    <p className="modal__garantia-sub">Receba sua conta na hora, direto no site.</p>
-                  </div>
-                </div>
-                <div className="modal__garantia">
-                  <span>🔒</span>
-                  <div>
-                    <p className="modal__garantia-title">Segurança total</p>
-                    <p className="modal__garantia-sub">Seus dados são protegidos durante todo o processo.</p>
-                  </div>
-                </div>
-                <div className="modal__garantia">
-                  <span>💳</span>
-                  <div>
-                    <p className="modal__garantia-title">Pagamento via Pix</p>
-                    <p className="modal__garantia-sub">Aprovação instantânea, sem taxas extras.</p>
-                  </div>
-                </div>
-              </div>
+.mbadge {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+}
 
-              {error && <p className="modal__error">{error}</p>}
+.mbadge-in {
+  background: rgba(16,185,129,0.1);
+  border: 1px solid rgba(16,185,129,0.3);
+  color: #34D399;
+}
 
-              {/* Botão */}
-              {esgotada ? (
-                <div className="modal__esgotado-msg">
-                  😔 Este produto está temporariamente esgotado. Volte em breve!
-                </div>
-              ) : (
-                <button
-                  className="modal__cta"
-                  onClick={handleBuy}
-                  disabled={loading}
-                >
-                  {loading ? <span className="spinner" /> : '🛒 Comprar agora'}
-                </button>
-              )}
-            </div>
-          </div>
-        )}
+.mbadge-out {
+  background: rgba(248,113,113,0.1);
+  border: 1px solid rgba(248,113,113,0.3);
+  color: #f87171;
+}
 
-        {step === 'pix' && pix && (
-          <div className="modal__body modal__body--pix">
-            <div className="pix__icon">💠</div>
-            <h2 className="modal__title">Pague com Pix</h2>
-            <p className="modal__level">Após o pagamento, a conta será enviada para sua caixa de entrada.</p>
-            {pix.qr_base64 && (
-              <img
-                src={`data:image/png;base64,${pix.qr_base64}`}
-                alt="QR Code Pix"
-                className="pix__qr"
-              />
-            )}
-            <div className="pix__code">
-              <input readOnly value={pix.pix_copia_cola} className="pix__input" />
-              <button className="btn btn-primary" onClick={copyPix}>
-                {copied ? '✅ Copiado!' : 'Copiar código'}
-              </button>
-            </div>
-            <p className="pix__note">⚡ A entrega é automática após confirmação do pagamento.</p>
-          </div>
-        )}
-      </div>
-    </div>
-  )
+.mbadge-entrega {
+  background: rgba(124,58,237,0.15);
+  border: 1px solid rgba(124,58,237,0.35);
+  color: #A855F7;
+}
+
+.mprice-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.mprice {
+  font-family: 'Inter', sans-serif;
+  font-size: 32px;
+  font-weight: 800;
+  color: #A855F7;
+  letter-spacing: -1px;
+}
+
+.mprice-sub {
+  font-size: 12px;
+  color: #5A5870;
+}
+
+.mdesc-block { }
+
+.mdesc-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #F0EEFF;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+
+.mdesc {
+  font-size: 13px;
+  color: #9CA3AF;
+  line-height: 1.7;
+}
+
+.mtags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.mtag {
+  background: #15141F;
+  border: 1px solid rgba(255,255,255,0.07);
+  color: #9CA3AF;
+  font-size: 11px;
+  padding: 3px 9px;
+  border-radius: 6px;
+}
+
+.mgarantias {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  background: #15141F;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 10px;
+}
+
+.mgarantia {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 18px;
+}
+
+.mg-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #F0EEFF;
+  margin-bottom: 1px;
+}
+
+.mg-sub {
+  font-size: 11px;
+  color: #5A5870;
+  line-height: 1.4;
+}
+
+.merror {
+  font-size: 12px;
+  color: #f87171;
+  padding: 8px 12px;
+  background: rgba(248,113,113,0.08);
+  border: 1px solid rgba(248,113,113,0.2);
+  border-radius: 6px;
+}
+
+.mbtn {
+  width: 100%;
+  padding: 14px;
+  background: #7C3AED;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-family: 'Syne', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: auto;
+  transition: background 0.2s;
+}
+.mbtn:hover { background: #A855F7; }
+.mbtn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.mesgotado-msg {
+  padding: 14px;
+  background: rgba(248,113,113,0.06);
+  border: 1px solid rgba(248,113,113,0.2);
+  border-radius: 10px;
+  font-size: 13px;
+  color: #f87171;
+  text-align: center;
+  margin-top: auto;
+}
+
+.mpix {
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+}
+
+.mpix-icon { font-size: 40px; }
+
+.mpix-sub {
+  font-size: 13px;
+  color: #9CA3AF;
+}
+
+.mpix-qr {
+  width: 180px;
+  height: 180px;
+  border-radius: 10px;
+  background: #fff;
+  padding: 8px;
+}
+
+.mpix-code {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  max-width: 420px;
+}
+
+.mpix-input {
+  flex: 1;
+  background: #15141F;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 11px;
+  color: #9CA3AF;
+  min-width: 0;
+  font-family: monospace;
+}
+
+.mpix-note {
+  font-size: 12px;
+  color: #5A5870;
 }
