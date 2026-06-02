@@ -1,165 +1,296 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../hooks/useAuth'
-import { api } from '../lib/api'
-import './ProductModal.css'
-
-export default function ProductModal({ listing, onClose }) {
-  const { user } = useAuth()
-  const navigate = useNavigate()
-  const [step, setStep]       = useState('detail')
-  const [pix, setPix]         = useState(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError]     = useState('')
-  const [copied, setCopied]   = useState(false)
-
-  const esgotada = listing.quantidade === 0
-
-  async function handleBuy() {
-    if (!user) { navigate('/login'); return }
-    setLoading(true)
-    setError('')
-    try {
-      const data = await api.checkout(listing.produto)
-      setPix(data)
-      setStep('pix')
-    } catch (e) {
-      setError(e.message)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  function copyPix() {
-    navigator.clipboard.writeText(pix.pix_copia_cola)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-
-  return (
-    <div className="modal-overlay fade-in" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="modal fade-up" role="dialog" aria-modal="true">
-        <button className="modal__close" onClick={onClose} aria-label="Fechar">✕</button>
-
-        {step === 'detail' && (
-          <div className="modal__layout">
-            {/* Coluna esquerda — imagem */}
-            <div className="modal__left">
-              <div className="modal__img">
-                {listing.imagem_url
-                  ? <img src={listing.imagem_url} alt={listing.nome} />
-                  : <div className="modal__img-empty">
-                      <span style={{fontSize:52,opacity:0.3}}>🎮</span>
-                    </div>
-                }
-                {esgotada && <div className="modal__img-esgotado">Esgotado</div>}
-              </div>
-            </div>
-
-            {/* Coluna direita — info */}
-            <div className="modal__right">
-              <h2 className="modal__title">{listing.nome}</h2>
-
-              {/* Estoque */}
-              <div className="modal__meta">
-                <span className={`modal__estoque-badge ${esgotada ? 'modal__estoque-badge--out' : ''}`}>
-                  {esgotada ? '❌ Esgotado' : `✅ ${listing.quantidade} em estoque`}
-                </span>
-                {!esgotada && (
-                  <span className="modal__entrega-badge">⚡ Entrega automática</span>
-                )}
-              </div>
-
-              {/* Preço */}
-              <div className="modal__price-block">
-                <span className="modal__price">R$ {Number(listing.preco).toFixed(2)}</span>
-                <span className="modal__price-sub">à vista no Pix</span>
-              </div>
-
-              {/* Descrição */}
-              {listing.descricao && (
-                <div className="modal__desc-block">
-                  <h3 className="modal__desc-title">Descrição</h3>
-                  <p className="modal__desc">{listing.descricao}</p>
-                </div>
-              )}
-
-              {/* Tags */}
-              {listing.tags?.length > 0 && (
-                <div className="modal__tags">
-                  {listing.tags.map(tag => (
-                    <span key={tag} className="modal__tag">{tag}</span>
-                  ))}
-                </div>
-              )}
-
-              {/* Garantias */}
-              <div className="modal__garantias">
-                <div className="modal__garantia">
-                  <span>⚡</span>
-                  <div>
-                    <p className="modal__garantia-title">Entrega imediata</p>
-                    <p className="modal__garantia-sub">Receba sua conta na hora, direto no site.</p>
-                  </div>
-                </div>
-                <div className="modal__garantia">
-                  <span>🔒</span>
-                  <div>
-                    <p className="modal__garantia-title">Segurança total</p>
-                    <p className="modal__garantia-sub">Seus dados são protegidos durante todo o processo.</p>
-                  </div>
-                </div>
-                <div className="modal__garantia">
-                  <span>💳</span>
-                  <div>
-                    <p className="modal__garantia-title">Pagamento via Pix</p>
-                    <p className="modal__garantia-sub">Aprovação instantânea, sem taxas extras.</p>
-                  </div>
-                </div>
-              </div>
-
-              {error && <p className="modal__error">{error}</p>}
-
-              {/* Botão */}
-              {esgotada ? (
-                <div className="modal__esgotado-msg">
-                  😔 Este produto está temporariamente esgotado. Volte em breve!
-                </div>
-              ) : (
-                <button
-                  className="modal__cta"
-                  onClick={handleBuy}
-                  disabled={loading}
-                >
-                  {loading ? <span className="spinner" /> : '🛒 Comprar agora'}
-                </button>
-              )}
-            </div>
-          </div>
-        )}
-
-        {step === 'pix' && pix && (
-          <div className="modal__body modal__body--pix">
-            <div className="pix__icon">💠</div>
-            <h2 className="modal__title">Pague com Pix</h2>
-            <p className="modal__level">Após o pagamento, a conta será enviada para sua caixa de entrada.</p>
-            {pix.qr_base64 && (
-              <img
-                src={`data:image/png;base64,${pix.qr_base64}`}
-                alt="QR Code Pix"
-                className="pix__qr"
-              />
-            )}
-            <div className="pix__code">
-              <input readOnly value={pix.pix_copia_cola} className="pix__input" />
-              <button className="btn btn-primary" onClick={copyPix}>
-                {copied ? '✅ Copiado!' : 'Copiar código'}
-              </button>
-            </div>
-            <p className="pix__note">⚡ A entrega é automática após confirmação do pagamento.</p>
-          </div>
-        )}
-      </div>
-    </div>
-  )
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.8);
+  backdrop-filter: blur(6px);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
 }
+
+.modal {
+  background: #0F0F1A;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 820px;
+  max-height: 92vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+.modal__close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 10;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+.modal__close:hover { background: var(--border); color: var(--text); }
+
+/* Layout 2 colunas */
+.modal__layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 480px;
+}
+
+@media (max-width: 600px) {
+  .modal__layout { grid-template-columns: 1fr; }
+}
+
+/* Coluna esquerda */
+.modal__left {
+  border-right: 1px solid var(--border);
+}
+.modal__img {
+  width: 100%;
+  height: 100%;
+  min-height: 320px;
+  background: var(--bg-surface);
+  border-radius: 16px 0 0 16px;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal__img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.modal__img-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+.modal__img-esgotado {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Syne', sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  color: #f87171;
+  letter-spacing: 2px;
+}
+
+/* Coluna direita */
+.modal__right {
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal__title {
+  font-family: 'Syne', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+}
+
+/* Badges */
+.modal__meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.modal__estoque-badge {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(16,185,129,0.1);
+  border: 1px solid rgba(16,185,129,0.3);
+  color: #34D399;
+}
+.modal__estoque-badge--out {
+  background: rgba(248,113,113,0.1);
+  border-color: rgba(248,113,113,0.3);
+  color: #f87171;
+}
+.modal__entrega-badge {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: var(--purple-dim);
+  border: 1px solid var(--purple-border);
+  color: var(--purple-light);
+}
+
+/* Preço */
+.modal__price-block {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.modal__price {
+  font-family: 'Inter', sans-serif;
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--purple-light);
+  letter-spacing: -1px;
+}
+.modal__price-sub {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+/* Descrição */
+.modal__desc-block { }
+.modal__desc-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.modal__desc {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.7;
+}
+
+/* Tags */
+.modal__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.modal__tag {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 11px;
+  padding: 3px 9px;
+  border-radius: 6px;
+}
+
+/* Garantias */
+.modal__garantias {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.modal__garantia {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 20px;
+}
+.modal__garantia-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 1px;
+}
+.modal__garantia-sub {
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.4;
+}
+
+/* Erro */
+.modal__error {
+  font-size: 12px;
+  color: #f87171;
+  padding: 8px 12px;
+  background: rgba(248,113,113,0.08);
+  border: 1px solid rgba(248,113,113,0.2);
+  border-radius: 6px;
+}
+
+/* Botão comprar */
+.modal__cta {
+  width: 100%;
+  padding: 14px;
+  background: var(--purple);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-family: 'Syne', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: auto;
+}
+.modal__cta:hover { background: var(--purple-light); transform: translateY(-1px); }
+.modal__cta:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+/* Esgotado */
+.modal__esgotado-msg {
+  padding: 14px;
+  background: rgba(248,113,113,0.06);
+  border: 1px solid rgba(248,113,113,0.2);
+  border-radius: 10px;
+  font-size: 13px;
+  color: #f87171;
+  text-align: center;
+  margin-top: auto;
+}
+
+/* Pix */
+.modal__body { padding: 28px; }
+.modal__body--pix {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+}
+.modal__level { font-size: 13px; color: var(--text-dim); }
+.pix__icon { font-size: 40px; }
+.pix__qr {
+  width: 180px;
+  height: 180px;
+  border-radius: 10px;
+  background: #fff;
+  padding: 8px;
+}
+.pix__code { display: flex; gap: 8px; width: 100%; }
+.pix__input {
+  flex: 1;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 11px;
+  color: var(--text-muted);
+  min-width: 0;
+}
+.pix__note { font-size: 12px; color: var(--text-dim); }
