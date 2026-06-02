@@ -87,8 +87,8 @@ export default function Home() {
       <div className="home__banner">
         <img src="/banner.png" alt="ShadowFruits" onError={e => e.target.style.display='none'} />
         <div className="home__banner-content">
-          <h1 className="home__banner-title">Shadow<span>Fruits</span></h1>
-          <p className="home__banner-sub">Marketplace de contas Roblox · Entrega imediata</p>
+          <h1 className="home__banner-title"><span></span></h1>
+          <p className="home__banner-sub"></p>
         </div>
       </div>
 
