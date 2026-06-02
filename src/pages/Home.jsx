@@ -14,7 +14,7 @@ const CATEGORIAS = [
 
 const PRODUTO_META = {
   MAX:           { cor: '#7C3AED', categoria: 'BASICA' },
-  GARP:          { cor: '#2563EB', categoria: 'BASICA' },
+  GODHUMAN:          { cor: '#2563EB', categoria: 'BASICA' },
   POPULAR:       { cor: '#059669', categoria: 'BASICA' },
   BROOK:         { cor: '#D97706', categoria: 'BASICA' },
   RACA_V3_ALE:   { cor: '#6366F1', categoria: 'V3' },
