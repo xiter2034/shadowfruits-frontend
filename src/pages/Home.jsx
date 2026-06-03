@@ -44,7 +44,7 @@ export default function Home() {
   async function fetchGrupos() {
     setLoading(true)
     const { data } = await supabase
-      .from('contas')
+      .from('contas_site')
       .select('id, nome, produto, preco, status, imagem_url, descricao, tags, destaque')
       .in('status', ['DISPONIVEL','VENDIDA'])
 
