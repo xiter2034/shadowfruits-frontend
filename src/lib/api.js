@@ -29,5 +29,5 @@ export const api = {
   checkout: (produto) => request('/checkout', { method: 'POST', body: JSON.stringify({ produto }) }),
 
   // Inbox — contas compradas pelo usuário
-  inbox: () => request('/inbox'),
+  inbox: () => request('/api/inbox'),
 }
